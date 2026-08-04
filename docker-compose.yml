@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: adaptprep_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: adaptprep_user
+      POSTGRES_PASSWORD: adaptprep_password
+      POSTGRES_DB: adaptprep_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adaptprep_user -d adaptprep_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. FastAPI Backend Service (Includes Python & C++ Sandboxed Execution)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: adaptprep_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://adaptprep_user:adaptprep_password@postgres:5432/adaptprep_db
+      - JWT_SECRET=adaptprep_placement_secret_jwt_key_2026
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LLM_MODEL=gpt-4o-mini
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 3. React Frontend Service (Monaco Editor & Recharts Analytics)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: adaptprep_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
