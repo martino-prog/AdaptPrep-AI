@@ -30,5 +30,8 @@ def get_db():
         db.close()
 
 def init_db():
-    from app import models
+    try:
+        from app import models
+    except ImportError:
+        from . import models
     Base.metadata.create_all(bind=engine)

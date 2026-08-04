@@ -1,6 +1,6 @@
 import json
 from sqlalchemy.orm import Session
-from app import models
+from . import models
 
 SAMPLE_QUESTIONS = [
     # --- ARRAYS (4 Questions) ---

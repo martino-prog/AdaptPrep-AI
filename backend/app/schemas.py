@@ -1,11 +1,16 @@
 from typing import List, Optional, Any, Dict
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from datetime import datetime
+
+try:
+    from pydantic import EmailStr
+except ImportError:
+    EmailStr = str
 
 # --- Auth Schemas ---
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
+    email: str = Field(..., min_length=5)
     password: str = Field(..., min_length=6)
 
 class UserLogin(BaseModel):
